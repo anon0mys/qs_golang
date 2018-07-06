@@ -5,6 +5,7 @@ import (
   "fmt"
   "log"
   "database/sql"
+  "net/http"
 
   "github.com/gorilla/mux"
   _ "github.com/lib/pq"
@@ -26,6 +27,12 @@ func (a *App) Initialize(user, password, dbname string) {
   }
 
   a.Router = mux.NewRouter()
+  a.Router.HandleFunc("/", getHome).Methods("GET")
+  log.Fatal(http.ListenAndServe(":3000", a.Router))
 }
 
 func (a *App) Run(addr string) { }
+
+func getHome(w http.ResponseWriter, r *http.Request) {
+  fmt.Fprint(w, "Quantified Self: GoLang")
+}
