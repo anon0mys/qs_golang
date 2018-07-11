@@ -1,9 +1,12 @@
 package main
 
-import "os"
+import (
+  "os"
+  "github.com/anon0mys/qs_golang/api"
+)
 
 func main() {
-  a := App{}
+  a := Api{}
   a.Initialize(
     os.Getenv("QS_GOLANG_DB_USERNAME"),
     os.Getenv("QS_GOLANG_DB_PASSWORD"),

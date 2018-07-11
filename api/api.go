@@ -1,5 +1,5 @@
 
-package main
+package api
 
 import (
   "fmt"
@@ -8,16 +8,18 @@ import (
   "encoding/json"
   "database/sql"
 
+  "github.com/anon0mys/qs_golang/models"
+
   "github.com/gorilla/mux"
   _ "github.com/lib/pq"
 )
 
-type App struct {
+type Api struct {
   Router *mux.Router
   DB     *sql.DB
 }
 
-func (a *App) Initialize(user, password, dbname string) {
+func (a *Api) Initialize(user, password, dbname string) {
   connectionString :=
     fmt.Sprintf("postgres://%s:%s@localhost/%s?sslmode=disable", user, password, dbname)
 
@@ -31,16 +33,16 @@ func (a *App) Initialize(user, password, dbname string) {
   a.initializeRoutes()
 }
 
-func (a *App) Run(addr string) {
+func (a *Api) Run(addr string) {
   log.Fatal(http.ListenAndServe(":3000", a.Router))
 }
 
-func (a *App) initializeRoutes() {
+func (a *Api) initializeRoutes() {
   a.Router.HandleFunc("/api/v1/foods", a.createFood).Methods("POST")
 }
 
-func (a *App) createFood(w http.ResponseWriter, r *http.Request) {
-  var f food
+func (a *Api) createFood(w http.ResponseWriter, r *http.Request) {
+  var f Food
   decoder := json.NewDecoder(r.Body)
   if err := decoder.Decode(&f); err != nil {
     respondWithError(w, http.StatusBadRequest, "Invalid request payload")
