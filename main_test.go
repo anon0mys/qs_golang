@@ -80,7 +80,7 @@ func TestCreateFoods(t *testing.T) {
 
   payload := []byte(`{"name":"Banana","calories":100}`)
 
-  req, _ := http.NewRequest("POST", "/foods", bytes.NewBuffer(payload))
+  req, _ := http.NewRequest("POST", "/api/v1/foods", bytes.NewBuffer(payload))
   response := executeRequest(req)
 
   checkResponseCode(t, http.StatusCreated, response.Code)
@@ -88,12 +88,12 @@ func TestCreateFoods(t *testing.T) {
   var m map[string]interface{}
   json.Unmarshal(response.Body.Bytes(), &m)
 
-  if m["name"] != "test food" {
+  if m["name"] != "Banana" {
     t.Errorf("Expected food name to be 'Banana'. Got '%v'", m["name"])
   }
 
-  if m["calories"] != 100 {
-    t.Errorf("Expected food calories to be 100. Got '%v'", m["calories"])
+  if m["calories"] != 100.0 {
+    t.Errorf("Expected food calories to be '100'. Got '%v'", m["calories"])
   }
 
   if m["id"] != 1.0 {

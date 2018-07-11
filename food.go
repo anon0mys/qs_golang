@@ -27,7 +27,7 @@ func (f *food) deleteFood(db *sql.DB) error {
 func (f *food) createFood(db *sql.DB) error {
   err := db.QueryRow(
     "INSERT INTO foods(name, calories) VALUES($1, $2) RETURNING id, name, calories",
-    f.Name, f.Calories).Scan(&f.ID)
+    f.Name, f.Calories).Scan(&f.ID, &f.Name, &f.Calories)
 
   if err != nil {
     return err

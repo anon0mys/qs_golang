@@ -36,7 +36,7 @@ func (a *App) Run(addr string) {
 }
 
 func (a *App) initializeRoutes() {
-  a.Router.HandleFunc("/foods", a.createFood).Methods("POST")
+  a.Router.HandleFunc("/api/v1/foods", a.createFood).Methods("POST")
 }
 
 func (a *App) createFood(w http.ResponseWriter, r *http.Request) {
