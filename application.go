@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-  a := Api{}
+  a := api.App{}
   a.Initialize(
     os.Getenv("QS_GOLANG_DB_USERNAME"),
     os.Getenv("QS_GOLANG_DB_PASSWORD"),

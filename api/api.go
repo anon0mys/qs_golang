@@ -14,12 +14,12 @@ import (
   _ "github.com/lib/pq"
 )
 
-type Api struct {
+type App struct {
   Router *mux.Router
   DB     *sql.DB
 }
 
-func (a *Api) Initialize(user, password, dbname string) {
+func (a *App) Initialize(user, password, dbname string) {
   connectionString :=
     fmt.Sprintf("postgres://%s:%s@localhost/%s?sslmode=disable", user, password, dbname)
 
@@ -33,16 +33,16 @@ func (a *Api) Initialize(user, password, dbname string) {
   a.initializeRoutes()
 }
 
-func (a *Api) Run(addr string) {
+func (a *App) Run(addr string) {
   log.Fatal(http.ListenAndServe(":3000", a.Router))
 }
 
-func (a *Api) initializeRoutes() {
-  a.Router.HandleFunc("/api/v1/foods", a.createFood).Methods("POST")
+func (a *App) initializeRoutes() {
+  a.Router.HandleFunc("/api/v1/foods", a.CreateFood).Methods("POST")
 }
 
-func (a *Api) createFood(w http.ResponseWriter, r *http.Request) {
-  var f Food
+func (a *App) CreateFood(w http.ResponseWriter, r *http.Request) {
+  var f models.Food
   decoder := json.NewDecoder(r.Body)
   if err := decoder.Decode(&f); err != nil {
     respondWithError(w, http.StatusBadRequest, "Invalid request payload")
@@ -50,7 +50,7 @@ func (a *Api) createFood(w http.ResponseWriter, r *http.Request) {
   }
   defer r.Body.Close()
 
-  if err := f.createFood(a.DB); err != nil {
+  if err := f.CreateFood(a.DB); err != nil {
     respondWithError(w, http.StatusInternalServerError, err.Error())
     return
   }
