@@ -12,5 +12,5 @@ func main() {
     os.Getenv("QS_GOLANG_DB_PASSWORD"),
     os.Getenv("QS_GOLANG_DB_NAME"))
 
-  a.Run(":3000")
+  a.Run()
 }
