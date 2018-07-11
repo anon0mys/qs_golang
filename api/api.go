@@ -2,34 +2,24 @@
 package api
 
 import (
-  "fmt"
   "log"
   "net/http"
   "encoding/json"
-  "database/sql"
 
   "github.com/anon0mys/qs_golang/internal/models"
+  "github.com/anon0mys/qs_golang/config/database"
 
   "github.com/gorilla/mux"
-  _ "github.com/lib/pq"
 )
 
 type App struct {
   Router *mux.Router
-  DB     *sql.DB
+  DB     *database.DB
   Server *http.Server
 }
 
-func (a *App) Initialize(user, password, dbname string) {
-  connectionString :=
-    fmt.Sprintf("postgres://%s:%s@localhost/%s?sslmode=disable", user, password, dbname)
-
-  var err error
-  a.DB, err = sql.Open("postgres", connectionString)
-  if err != nil {
-    log.Fatal(err)
-  }
-
+func (a *App) Initialize() {
+  a.DB = database.Initialize()
   a.Router = mux.NewRouter()
   a.Server = &http.Server{Addr: ":3000", Handler: a.Router}
   a.initializeRoutes()
@@ -65,7 +55,7 @@ func (a *App) CreateFood(w http.ResponseWriter, r *http.Request) {
   }
   defer r.Body.Close()
 
-  if err := f.CreateFood(a.DB); err != nil {
+  if err := f.CreateFood(a.DB.Instance); err != nil {
     respondWithError(w, http.StatusInternalServerError, err.Error())
     return
   }

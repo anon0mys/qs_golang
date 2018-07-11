@@ -2,8 +2,8 @@ package api_test
 
 import (
   "testing"
-  "os"
   "log"
+  "os"
 
   api "github.com/anon0mys/qs_golang/api"
 
@@ -20,19 +20,16 @@ func TestAPI(t *testing.T) {
 
 var _ = BeforeSuite(func() {
   app := api.App{}
-  app.Initialize(
-    os.Getenv("QS_GOLANG_DB_USERNAME"),
-    os.Getenv("QS_GOLANG_DB_PASSWORD"),
-    os.Getenv("QS_GOLANG_DB_NAME"))
+  app.Initialize()
 
   app.Run()
 
-  if _, err := app.DB.Exec(tableCreationQuery); err != nil {
+  if _, err := app.DB.Instance.Exec(tableCreationQuery); err != nil {
       log.Fatal(err)
   }
 
-  app.DB.Exec("DELETE FROM foods")
-  app.DB.Exec("ALTER SEQUENCE foods_id_seq RESTART WITH 1")
+  app.DB.Instance.Exec("DELETE FROM foods")
+  app.DB.Instance.Exec("ALTER SEQUENCE foods_id_seq RESTART WITH 1")
 })
 
 var _ = AfterSuite(func() {
