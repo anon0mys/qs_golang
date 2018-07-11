@@ -1,11 +1,15 @@
 package main_test
 
 import (
-    "os"
-    "testing"
     "log"
+    "os"
+    "encoding/json"
+    "bytes"
+    "testing"
+    "net/http"
+    "net/http/httptest"
 
-    "github.com/user/qs_golang"
+    "github.com/anon0mys/qs_golang"
 )
 
 var a main.App
@@ -13,9 +17,9 @@ var a main.App
 func TestMain(m *testing.M) {
     a = main.App{}
     a.Initialize(
-        os.Getenv("QS_GOLANGE_TEST_DB_USERNAME"),
-        os.Getenv("QS_GOLANGE_TEST_DB_PASSWORD"),
-        os.Getenv("QS_GOLANGE_TEST_DB_NAME"))
+        os.Getenv("TEST_DB_USERNAME"),
+        os.Getenv("TEST_DB_PASSWORD"),
+        os.Getenv("TEST_DB_NAME"))
 
     ensureTableExists()
 
@@ -33,14 +37,66 @@ func ensureTableExists() {
 }
 
 func clearTable() {
-    a.DB.Exec("DELETE FROM products")
-    a.DB.Exec("ALTER SEQUENCE products_id_seq RESTART WITH 1")
+    a.DB.Exec("DELETE FROM foods")
+    a.DB.Exec("ALTER SEQUENCE foods_id_seq RESTART WITH 1")
 }
 
-const tableCreationQuery = `CREATE TABLE IF NOT EXISTS products
+const tableCreationQuery = `CREATE TABLE IF NOT EXISTS foods
 (
 id SERIAL,
 name TEXT NOT NULL,
-price NUMERIC(10,2) NOT NULL DEFAULT 0.00,
-CONSTRAINT products_pkey PRIMARY KEY (id)
+calories INTEGER NOT NULL,
+CONSTRAINT foods_pkey PRIMARY KEY (id)
 )`
+
+func TestEmptyTable(t *testing.T) {
+  clearTable()
+
+  req, _ := http.NewRequest("GET", "/foods", nil)
+  response := executeRequest(req)
+
+  checkResponseCode(t, http.StatusOK, response.Code)
+
+  if body := response.Body.String(); body != "[]" {
+    t.Errorf("Expected an empty array. Got %s", body)
+  }
+}
+
+func executeRequest(req *http.Request) *httptest.ResponseRecorder {
+  rr := httptest.NewRecorder()
+  a.Router.ServeHTTP(rr, req)
+
+  return rr
+}
+
+func checkResponseCode(t *testing.T, expected, actual int) {
+  if expected != actual {
+    t.Errorf("Expected response code %d. Got %d\n", expected, actual)
+  }
+}
+
+func TestCreateFoods(t *testing.T) {
+  clearTable()
+
+  payload := []byte(`{"name":"Banana","calories":100}`)
+
+  req, _ := http.NewRequest("POST", "/foods", bytes.NewBuffer(payload))
+  response := executeRequest(req)
+
+  checkResponseCode(t, http.StatusCreated, response.Code)
+
+  var m map[string]interface{}
+  json.Unmarshal(response.Body.Bytes(), &m)
+
+  if m["name"] != "test food" {
+    t.Errorf("Expected food name to be 'Banana'. Got '%v'", m["name"])
+  }
+
+  if m["calories"] != 100 {
+    t.Errorf("Expected food calories to be 100. Got '%v'", m["calories"])
+  }
+
+  if m["id"] != 1.0 {
+    t.Errorf("Expected food id to be '1'. Got '%v'", m["id"])
+  }
+}
