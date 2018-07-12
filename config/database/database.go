@@ -30,6 +30,9 @@ func Initialize() *DB {
     log.Fatal(err)
   }
 
+  instance.Table("foods").CreateTable(&models.Food{})
+  instance.Table("meals").CreateTable(&models.Meal{})
+
   instance.AutoMigrate(&models.Food{})
   instance.AutoMigrate(&models.Meal{})
 

@@ -6,8 +6,7 @@ import (
 )
 
 type Food struct {
-  gorm.Model
-  ID int `gorm:PRIMARY_KEY`
+  ID int `gorm:"PRIMARY_KEY;AUTO_INCREMENT"`
   Name string `gorm:"not null;"`
   Calories int `gorm:"not null;"`
 }
