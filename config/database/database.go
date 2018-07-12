@@ -19,7 +19,7 @@ func Initialize() *DB {
   password := os.Getenv("QS_GOLANG_DB_PASSWORD")
   host := os.Getenv("QS_GOLANG_DB_HOST")
   port := os.Getenv("QS_GOLANG_DB_PORT")
-  connectionParams := fmt.Sprintf("postgres://%s:%s/%s?user=%s&password=%s&sslmode=disable", host, port, database, username, password)
+  connectionParams := fmt.Sprintf("%s:%s/%s?user=%s&password=%s&sslmode=disable", host, port, database, username, password)
 
   var err error
   instance, err := sql.Open("postgres", connectionParams)
