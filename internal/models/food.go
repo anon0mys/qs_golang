@@ -12,8 +12,26 @@ type Food struct {
   Calories int `json:"calories"`
 }
 
-func (f *Food) GetFoods(db *sql.DB, start, count int) ([]Food, error) {
-  return nil, errors.New("Not implemented")
+func (f *Food) GetFoods(db *sql.DB) ([]Food, error) {
+  rows, err := db.Query("SELECT id, name, calories FROM foods")
+
+  if err != nil {
+    return nil, err
+  }
+
+  defer rows.Close()
+
+  foods := []Food{}
+
+  for rows.Next() {
+    var f Food
+    if err := rows.Scan(&f.ID, &f.Name, &f.Calories); err != nil {
+      return nil, err
+    }
+    foods = append(foods, f)
+  }
+
+  return foods, nil
 }
 
 func (f *Food) UpdateFood(db *sql.DB) error {

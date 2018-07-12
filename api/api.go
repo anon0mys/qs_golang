@@ -31,7 +31,7 @@ func (a *App) Run() {
 
 func (a *App) initializeRoutes() {
   a.Router.HandleFunc("/api/v1/foods", a.CreateFood).Methods("POST")
-  a.Router.HandleFunc("/api/v1/foods", a.CreateFood).Methods("GET")
+  a.Router.HandleFunc("/api/v1/foods", a.GetFoods).Methods("GET")
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
@@ -44,6 +44,18 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
   w.Header().Set("Content-Type", "application/json")
   w.WriteHeader(code)
   w.Write(response)
+}
+
+func (a *App) GetFoods(w http.ResponseWriter, r *http.Request) {
+  var f models.Food
+  foods, err := f.GetFoods(a.DB.Instance)
+
+  if err != nil {
+    respondWithError(w, http.StatusInternalServerError, err.Error())
+    return
+  }
+
+  respondWithJSON(w, http.StatusOK, foods)
 }
 
 func (a *App) CreateFood(w http.ResponseWriter, r *http.Request) {
