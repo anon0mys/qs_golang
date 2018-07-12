@@ -41,7 +41,7 @@ ginkgo -r -v
 
 ### Endpoints
 - Documentation for all endpoints is here:
-[Endpoint Explanation](https://github.com/anon0mys/qs_golang/endpoint.md)
+[Endpoint Explanation](https://github.com/anon0mys/qs_golang/blob/master/endpoint.md)
 
 ### Contributions
 Quantified self is open source and welcomes contributions. If you would like to contribute please follow this workflow:
