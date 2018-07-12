@@ -21,12 +21,26 @@ var _ = Describe("Foods API", func() {
 				req, _ := http.NewRequest("POST", "/api/v1/foods", bytes.NewBuffer(foodParams))
 				response := httptest.NewRecorder()
 
-				handler := http.HandlerFunc(app.CreateFood)
-
-				handler.ServeHTTP(response, req)
+				app.Router.ServeHTTP(response, req)
 
 				Expect(response.Code).To(Equal(http.StatusCreated))
-				fmt.Printf("Test")
+			})
+		})
+	})
+
+	Describe("GET /api/v1/foods", func() {
+		Context("with valid parameters", func() {
+			It("should return the created food", func() {
+				app.DB.Instance.QueryRow(
+			    "INSERT INTO foods(name, calories) VALUES(Banana, 100)").Scan(&f.ID, &f.Name, &f.Calories)
+
+				req, _ := http.NewRequest("GET", "/api/v1/foods", nil)
+				response := httptest.NewRecorder()
+
+				app.Router.ServeHTTP(response, req)
+
+				Expect(response.Code).To(Equal(http.StatusOK))
+				Expect(repsonse.Body).To(Eqaul(`{"name":"Banana","calories":100}`))
 			})
 		})
 	})

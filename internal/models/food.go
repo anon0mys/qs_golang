@@ -3,7 +3,6 @@ package models
 
 import (
   "database/sql"
-  "errors"
 )
 
 type Food struct {
@@ -12,16 +11,39 @@ type Food struct {
   Calories int `json:"calories"`
 }
 
-func (f *Food) GetFoods(db *sql.DB, start, count int) ([]Food, error) {
-  return nil, errors.New("Not implemented")
+func (f *Food) GetFoods(db *sql.DB) ([]Food, error) {
+  rows, err := db.Query("SELECT id, name, calories FROM foods")
+
+  if err != nil {
+    return nil, err
+  }
+
+  defer rows.Close()
+
+  foods := []Food{}
+
+  for rows.Next() {
+    var f Food
+    if err := rows.Scan(&f.ID, &f.Name, &f.Calories); err != nil {
+      return nil, err
+    }
+    foods = append(foods, f)
+  }
+
+  return foods, nil
 }
 
 func (f *Food) UpdateFood(db *sql.DB) error {
-  return errors.New("Not implemented")
+  _, err := db.Exec("UPDATE foods SET name=$1, calories=$2 WHERE id=$3",
+    f.Name, f.Calories, f.ID)
+
+  return err
 }
 
 func (f *Food) DeleteFood(db *sql.DB) error {
-  return errors.New("Not implemented")
+  _, err := db.Exec("DELETE FROM foods WHERE id=$1", f.ID)
+
+  return err
 }
 
 func (f *Food) CreateFood(db *sql.DB) error {
@@ -37,5 +59,6 @@ func (f *Food) CreateFood(db *sql.DB) error {
 }
 
 func (f *Food) GetFood(db *sql.DB) error {
-  return errors.New("Not implemented")
+  return db.QueryRow("SELECT id, name, calories FROM foods WHERE id=$1",
+    f.ID).Scan(&f.ID, &f.Name, &f.Calories)
 }
