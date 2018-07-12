@@ -3,6 +3,7 @@ package api
 
 import (
   "log"
+  "os"
   "net/http"
   "encoding/json"
   "strconv"
@@ -29,7 +30,7 @@ func (a *App) Initialize() {
   originsOk := handlers.AllowedOrigins([]string{"*"})
   methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"})
 
-  a.Server = &http.Server{Addr: ":3000", Handler: handlers.CORS(headersOk, originsOk, methodsOk)(a.Router)}
+  a.Server = &http.Server{Addr: ":" + os.Getenv("PORT"), Handler: handlers.CORS(headersOk, originsOk, methodsOk)(a.Router)}
 }
 
 func (a *App) Run() {
