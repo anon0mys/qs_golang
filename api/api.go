@@ -41,6 +41,7 @@ func (a *App) initializeRoutes() {
   a.Router.HandleFunc("/api/v1/foods/", a.GetFoods).Methods("GET")
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.GetFood).Methods("GET")
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.UpdateFood).Methods("PUT", "PATCH", "OPTIONS")
+  a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.DeleteFood).Methods("DELETE")
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
@@ -125,4 +126,21 @@ func (a *App) CreateFood(w http.ResponseWriter, r *http.Request) {
   }
 
   respondWithJSON(w, http.StatusCreated, f)
+}
+
+func (a *App) DeleteFood(w http.ResponseWriter, r *http.Request) {
+  vars := mux.Vars(r)
+  id, err := strconv.Atoi(vars["id"])
+  if err != nil {
+    respondWithError(w, http.StatusBadRequest, "Food not found")
+    return
+  }
+
+  f := models.Food{ID: id}
+  if err := f.DeleteFood(a.DB.Instance); err != nil {
+    respondWithError(w, 404, "Food not deleted")
+    return
+  }
+
+  respondWithJSON(w, 204, "Food succesfully deleted")
 }

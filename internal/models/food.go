@@ -3,7 +3,6 @@ package models
 
 import (
   "database/sql"
-  "errors"
 )
 
 type Food struct {
@@ -42,7 +41,9 @@ func (f *Food) UpdateFood(db *sql.DB) error {
 }
 
 func (f *Food) DeleteFood(db *sql.DB) error {
-  return errors.New("Not implemented")
+  _, err := db.Exec("DELETE FROM foods WHERE id=$1", f.ID)
+
+  return err
 }
 
 func (f *Food) CreateFood(db *sql.DB) error {
