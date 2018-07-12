@@ -24,7 +24,7 @@ var _ = BeforeSuite(func() {
 
   app.Run()
 
-  if _, err := app.DB.Instance.Exec(tableCreationQuery); err != nil {
+  if _, err := app.DB.Instance.Exec(foodsTableCreateQuery); err != nil {
       log.Fatal(err)
   }
 
@@ -36,10 +36,23 @@ var _ = AfterSuite(func() {
   os.Exit(0)
 })
 
-const tableCreationQuery = `CREATE TABLE IF NOT EXISTS foods
+const foodsTableCreateQuery = `CREATE TABLE IF NOT EXISTS foods
 (
 id SERIAL,
 name TEXT NOT NULL,
 calories INTEGER NOT NULL,
 CONSTRAINT foods_pkey PRIMARY KEY (id)
+)`
+
+const mealsTableCreateQuery = `CREATE TABLE IF NOT EXISTS meals
+(
+id SERIAL,
+name TEXT NOT NULL,
+CONSTRAINT meals_pkey PRIMARY KEY (id)
+)`
+
+const mealFoodsTableCreateQuery = `CREATE TABLE IF NOT EXISTS meal_foods
+(
+food_id INTEGER REFERENCES foods,
+meal_id INTEGER REFERENCES meals
 )`

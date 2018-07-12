@@ -42,6 +42,8 @@ func (a *App) initializeRoutes() {
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.GetFood).Methods("GET")
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.UpdateFood).Methods("PUT", "PATCH", "OPTIONS")
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.DeleteFood).Methods("DELETE")
+  a.Router.HandleFunc("/api/v1/meals/", a.GetMeals).Methods("GET")
+  a.Router.HandleFunc("/api/v1/meals/{id:[0-9]+}/foods", a.GetMeal).Methods("GET")
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
@@ -58,12 +60,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 
 func (a *App) GetFoods(w http.ResponseWriter, r *http.Request) {
   var f models.Food
-  foods, err := f.GetFoods(a.DB.Instance)
-
-  if err != nil {
-    respondWithError(w, http.StatusInternalServerError, err.Error())
-    return
-  }
+  foods := f.GetFoods(a.DB.Instance)
 
   respondWithJSON(w, http.StatusOK, foods)
 }
@@ -143,4 +140,27 @@ func (a *App) DeleteFood(w http.ResponseWriter, r *http.Request) {
   }
 
   respondWithJSON(w, 204, "Food succesfully deleted")
+}
+
+func (a *App) GetMeals(w http.ResponseWriter, r *http.Request) {
+  var m models.Meal
+  meals := m.GetMeals(a.DB.Instance)
+
+  respondWithJSON(w, http.StatusOK, meals)
+}
+
+func (a *App) GetMeal(w http.ResponseWriter, r *http.Request) {
+  var m models.Meal
+  params := mux.Vars(r)
+
+  id, err := strconv.Atoi(params["id"])
+  if err != nil {
+    respondWithError(w, http.StatusBadRequest, "Invalid food ID")
+    return
+  }
+
+  m = models.Meal {ID: id}
+  meal := m.GetMeal(a.DB.Instance)
+
+  respondWithJSON(w, http.StatusOK, meal)
 }

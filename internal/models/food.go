@@ -2,63 +2,59 @@
 package models
 
 import (
-  "database/sql"
+  "github.com/jinzhu/gorm"
 )
 
 type Food struct {
-  ID int `json:"id"`
-  Name string `json:"name"`
-  Calories int `json:"calories"`
+  ID int `gorm:"PRIMARY_KEY;AUTO_INCREMENT" json:"id"`
+  Name string `gorm:"not null;" json:"name"`
+  Calories int `gorm:"not null;" json:"calories"`
 }
 
-func (f *Food) GetFoods(db *sql.DB) ([]Food, error) {
-  rows, err := db.Query("SELECT id, name, calories FROM foods")
+func (f *Food) GetFoods(db *gorm.DB) []Food {
+  var foods []Food
 
-  if err != nil {
-    return nil, err
+  db.Select("ID, Name, Calories").Find(&foods)
+
+  return foods
+}
+
+func (f *Food) UpdateFood(db *gorm.DB) error {
+  food := Food{}
+
+  if err := db.First(&food, f.ID).Error; err != nil {
+    return err
   }
 
-  defer rows.Close()
+  food.Name = f.Name
+  food.Calories = f.Calories
 
-  foods := []Food{}
+  db.Save(&food)
 
-  for rows.Next() {
-    var f Food
-    if err := rows.Scan(&f.ID, &f.Name, &f.Calories); err != nil {
-      return nil, err
-    }
-    foods = append(foods, f)
+  return nil
+}
+
+func (f *Food) DeleteFood(db *gorm.DB) error {
+  if err := db.Delete(&f).Error; err != nil {
+    return err
   }
-
-  return foods, nil
+  return nil
 }
 
-func (f *Food) UpdateFood(db *sql.DB) error {
-  _, err := db.Exec("UPDATE foods SET name=$1, calories=$2 WHERE id=$3",
-    f.Name, f.Calories, f.ID)
+func (f *Food) CreateFood(db *gorm.DB) error {
+  db.NewRecord(&f)
 
-  return err
-}
-
-func (f *Food) DeleteFood(db *sql.DB) error {
-  _, err := db.Exec("DELETE FROM foods WHERE id=$1", f.ID)
-
-  return err
-}
-
-func (f *Food) CreateFood(db *sql.DB) error {
-  err := db.QueryRow(
-    "INSERT INTO foods(name, calories) VALUES($1, $2) RETURNING id, name, calories",
-    f.Name, f.Calories).Scan(&f.ID, &f.Name, &f.Calories)
-
-  if err != nil {
+  if err := db.Create(&f).Error; err != nil {
     return err
   }
 
   return nil
 }
 
-func (f *Food) GetFood(db *sql.DB) error {
-  return db.QueryRow("SELECT id, name, calories FROM foods WHERE id=$1",
-    f.ID).Scan(&f.ID, &f.Name, &f.Calories)
+func (f *Food) GetFood(db *gorm.DB) error {
+  if err := db.Select("id, name, calories").First(&f, f.ID).Error; err != nil {
+    return err
+  }
+
+  return nil
 }

@@ -2,6 +2,9 @@
 	"ImportPath": "github.com/anon0mys/qs_golang",
 	"GoVersion": "go1.10",
 	"GodepVersion": "v80",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/gorilla/handlers",
