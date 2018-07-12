@@ -14,16 +14,18 @@ type DB struct {
 }
 
 func Initialize() *DB {
-  user := os.Getenv("QS_GOLANG_DB_USERNAME")
+  database := os.Getenv("QS_GOLANG_DB_NAME")
+  username := os.Getenv("QS_GOLANG_DB_USERNAME")
   password := os.Getenv("QS_GOLANG_DB_PASSWORD")
-  dbname := os.Getenv("QS_GOLANG_DB_NAME")
-  connectionParams := fmt.Sprintf("postgres://%s:%s@localhost/%s?sslmode=disable", user, password, dbname)
+  host := os.Getenv("QS_GOLANG_DB_HOST")
+  port := os.Getenv("QS_GOLANG_DB_PORT")
+  connectionParams := fmt.Sprintf("postgres://%s:%s/%s?user=%s&password=%s&sslmode=disable", host, port, database, username, password)
 
   var err error
   instance, err := sql.Open("postgres", connectionParams)
   if err != nil {
     log.Fatal(err)
   }
-  
+
   return &DB {Instance: instance}
 }
