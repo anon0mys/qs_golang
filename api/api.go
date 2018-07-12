@@ -42,6 +42,7 @@ func (a *App) initializeRoutes() {
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.GetFood).Methods("GET")
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.UpdateFood).Methods("PUT", "PATCH", "OPTIONS")
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.DeleteFood).Methods("DELETE")
+  a.Router.HandleFunc("/api/v1/meals/", a.GetMeals).Methods("GET")
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
@@ -143,4 +144,16 @@ func (a *App) DeleteFood(w http.ResponseWriter, r *http.Request) {
   }
 
   respondWithJSON(w, 204, "Food succesfully deleted")
+}
+
+func (a *App) GetMeals(w http.ResponseWriter, r *http.Request) {
+  var m models.Meal
+  meals, err := m.GetMeals(a.DB.Instance)
+
+  if err != nil {
+    respondWithError(w, http.StatusInternalServerError, err.Error())
+    return
+  }
+
+  respondWithJSON(w, http.StatusOK, meals)
 }
