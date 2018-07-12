@@ -35,7 +35,10 @@ func (f *Food) GetFoods(db *sql.DB) ([]Food, error) {
 }
 
 func (f *Food) UpdateFood(db *sql.DB) error {
-  return errors.New("Not implemented")
+  _, err := db.Exec("UPDATE foods SET name=$1, calories=$2 WHERE id=$3",
+    f.Name, f.Calories, f.ID)
+
+  return err
 }
 
 func (f *Food) DeleteFood(db *sql.DB) error {

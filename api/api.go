@@ -40,6 +40,7 @@ func (a *App) initializeRoutes() {
   a.Router.HandleFunc("/api/v1/foods/", a.CreateFood).Methods("POST")
   a.Router.HandleFunc("/api/v1/foods/", a.GetFoods).Methods("GET")
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.GetFood).Methods("GET")
+  a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.UpdateFood).Methods("PUT", "PATCH", "OPTIONS")
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
@@ -85,11 +86,35 @@ func (a *App) GetFood(w http.ResponseWriter, r *http.Request) {
   respondWithJSON(w, http.StatusOK, f)
 }
 
+func (a *App) UpdateFood(w http.ResponseWriter, r *http.Request) {
+  params := mux.Vars(r)
+  id, err := strconv.Atoi(params["id"])
+  if err != nil {
+    respondWithError(w, http.StatusBadRequest, "Invalid food ID")
+  }
+
+  var f models.Food
+  decoder := json.NewDecoder(r.Body)
+  if err := decoder.Decode(&f); err != nil {
+    respondWithError(w, 400, "Food not updated")
+    return
+  }
+  defer r.Body.Close()
+  f.ID = id
+
+  if err := f.UpdateFood(a.DB.Instance); err != nil {
+    respondWithError(w, 400, "Food not updated")
+    return
+  }
+
+  respondWithJSON(w, http.StatusOK, f)
+}
+
 func (a *App) CreateFood(w http.ResponseWriter, r *http.Request) {
   var f models.Food
   decoder := json.NewDecoder(r.Body)
   if err := decoder.Decode(&f); err != nil {
-    respondWithError(w, http.StatusBadRequest, "Invalid request payload")
+    respondWithError(w, http.StatusBadRequest, "Food not created")
     return
   }
   defer r.Body.Close()
