@@ -59,12 +59,7 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 
 func (a *App) GetFoods(w http.ResponseWriter, r *http.Request) {
   var f models.Food
-  foods, err := f.GetFoods(a.DB.Instance)
-
-  if err != nil {
-    respondWithError(w, http.StatusInternalServerError, err.Error())
-    return
-  }
+  foods := f.GetFoods(a.DB.Instance)
 
   respondWithJSON(w, http.StatusOK, foods)
 }
@@ -148,12 +143,7 @@ func (a *App) DeleteFood(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) GetMeals(w http.ResponseWriter, r *http.Request) {
   var m models.Meal
-  meals, err := m.GetMeals(a.DB.Instance)
-
-  if err != nil {
-    respondWithError(w, http.StatusInternalServerError, err.Error())
-    return
-  }
+  meals := m.GetMeals(a.DB.Instance)
 
   respondWithJSON(w, http.StatusOK, meals)
 }
