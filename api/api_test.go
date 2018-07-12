@@ -22,8 +22,6 @@ var _ = BeforeSuite(func() {
   app := api.App{}
   app.Initialize()
 
-  app.Run()
-
   if _, err := app.DB.Instance.Exec(tableCreationQuery); err != nil {
       log.Fatal(err)
   }

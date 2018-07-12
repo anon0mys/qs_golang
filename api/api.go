@@ -21,8 +21,8 @@ type App struct {
 func (a *App) Initialize() {
   a.DB = database.Initialize()
   a.Router = mux.NewRouter()
-  a.Server = &http.Server{Addr: ":3000", Handler: a.Router}
   a.initializeRoutes()
+  a.Server = &http.Server{Addr: ":3000", Handler: a.Router}
 }
 
 func (a *App) Run() {

@@ -24,5 +24,6 @@ func Initialize() *DB {
   if err != nil {
     log.Fatal(err)
   }
+  
   return &DB {Instance: instance}
 }
