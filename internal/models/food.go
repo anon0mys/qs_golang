@@ -55,5 +55,6 @@ func (f *Food) CreateFood(db *sql.DB) error {
 }
 
 func (f *Food) GetFood(db *sql.DB) error {
-  return errors.New("Not implemented")
+  return db.QueryRow("SELECT id, name, calories FROM foods WHERE id=$1",
+    f.ID).Scan(&f.ID, &f.Name, &f.Calories)
 }
