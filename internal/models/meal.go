@@ -6,9 +6,9 @@ import (
 )
 
 type Meal struct {
-  ID int `gorm:"PRIMARY_KEY;AUTO_INCREMENT"`
-  Name string `gorm:"not null;"`
-  Foods []Food `gorm:"many2many:meal_foods;"`
+  ID int `gorm:"PRIMARY_KEY;AUTO_INCREMENT" json:"id"`
+  Name string `gorm:"not null;" json:"name"`
+  Foods []Food `gorm:"many2many:meal_foods;" json:"foods"`
 }
 
 func (m *Meal) GetMeals(db *gorm.DB) []Meal {
