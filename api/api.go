@@ -11,6 +11,7 @@ import (
   "github.com/anon0mys/qs_golang/config/database"
 
   "github.com/gorilla/mux"
+  "github.com/gorilla/handlers"
 )
 
 type App struct {
@@ -23,7 +24,12 @@ func (a *App) Initialize() {
   a.DB = database.Initialize()
   a.Router = mux.NewRouter()
   a.initializeRoutes()
-  a.Server = &http.Server{Addr: ":3000", Handler: a.Router}
+
+  headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
+  originsOk := handlers.AllowedOrigins([]string{"*"})
+  methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"})
+
+  a.Server = &http.Server{Addr: ":3000", Handler: handlers.CORS(headersOk, originsOk, methodsOk)(a.Router)}
 }
 
 func (a *App) Run() {
@@ -31,8 +37,8 @@ func (a *App) Run() {
 }
 
 func (a *App) initializeRoutes() {
-  a.Router.HandleFunc("/api/v1/foods", a.CreateFood).Methods("POST")
-  a.Router.HandleFunc("/api/v1/foods", a.GetFoods).Methods("GET")
+  a.Router.HandleFunc("/api/v1/foods/", a.CreateFood).Methods("POST")
+  a.Router.HandleFunc("/api/v1/foods/", a.GetFoods).Methods("GET")
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.GetFood).Methods("GET")
 }
 
