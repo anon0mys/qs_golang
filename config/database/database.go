@@ -3,7 +3,6 @@ package database
 import (
   "fmt"
   "log"
-  "os"
 
   "github.com/anon0mys/qs_golang/internal/models"
 
@@ -15,13 +14,8 @@ type DB struct {
   Instance *gorm.DB
 }
 
-func Initialize() *DB {
-  database := os.Getenv("QS_GOLANG_DB_NAME")
-  username := os.Getenv("QS_GOLANG_DB_USERNAME")
-  password := os.Getenv("QS_GOLANG_DB_PASSWORD")
-  host := os.Getenv("QS_GOLANG_DB_HOST")
-  port := os.Getenv("QS_GOLANG_DB_PORT")
-  connectionParams := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", host, port, username, database, password)
+func Initialize(dbname, username, password, host, port string) *DB {
+  connectionParams := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", host, port, username, dbname, password)
 
   var err error
   instance, err := gorm.Open("postgres", connectionParams)
@@ -30,8 +24,10 @@ func Initialize() *DB {
     log.Fatal(err)
   }
 
-  instance.Table("foods").CreateTable(&models.Food{})
-  instance.Table("meals").CreateTable(&models.Meal{})
+  if instance.Table("foods") == nil && instance.Table("meals") == nil {
+    instance.Table("foods").CreateTable(&models.Food{})
+    instance.Table("meals").CreateTable(&models.Meal{})
+  }
 
   instance.AutoMigrate(&models.Food{})
   instance.AutoMigrate(&models.Meal{})

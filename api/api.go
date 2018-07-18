@@ -7,6 +7,7 @@ import (
   "net/http"
   "encoding/json"
   "strconv"
+  "fmt"
 
   "github.com/anon0mys/qs_golang/internal/models"
   "github.com/anon0mys/qs_golang/config/database"
@@ -22,9 +23,14 @@ type App struct {
 }
 
 func (a *App) Initialize() {
-  a.DB = database.Initialize()
+  dbname := os.Getenv("QS_GOLANG_DB_NAME")
+  username := os.Getenv("QS_GOLANG_DB_USERNAME")
+  password := os.Getenv("QS_GOLANG_DB_PASSWORD")
+  host := os.Getenv("QS_GOLANG_DB_HOST")
+  port := os.Getenv("QS_GOLANG_DB_PORT")
+  a.DB = database.Initialize(dbname, username, password, host, port)
   a.Router = mux.NewRouter()
-  a.initializeRoutes()
+  a.InitializeRoutes()
 
   headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
   originsOk := handlers.AllowedOrigins([]string{"*"})
@@ -34,17 +40,22 @@ func (a *App) Initialize() {
 }
 
 func (a *App) Run() {
+  fmt.Printf("Server starting, listening on port: %v\n", a.Server.Addr)
   log.Fatal(a.Server.ListenAndServe())
 }
 
-func (a *App) initializeRoutes() {
+func (a *App) InitializeRoutes() {
   a.Router.HandleFunc("/api/v1/foods/", a.CreateFood).Methods("POST")
+  a.Router.HandleFunc("/api/v1/foods", a.CreateFood).Methods("POST")
   a.Router.HandleFunc("/api/v1/foods/", a.GetFoods).Methods("GET")
+  a.Router.HandleFunc("/api/v1/foods", a.GetFoods).Methods("GET")
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.GetFood).Methods("GET")
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.UpdateFood).Methods("PUT", "PATCH", "OPTIONS")
   a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.DeleteFood).Methods("DELETE")
   a.Router.HandleFunc("/api/v1/meals/", a.GetMeals).Methods("GET")
+  a.Router.HandleFunc("/api/v1/meals", a.GetMeals).Methods("GET")
   a.Router.HandleFunc("/api/v1/meals/{id:[0-9]+}/foods", a.GetMeal).Methods("GET")
+  a.Router.HandleFunc("/api/v1/meals/{id:[0-9]+}/foods/", a.GetMeal).Methods("GET")
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
