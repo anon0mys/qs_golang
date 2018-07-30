@@ -31,6 +31,7 @@ func Initialize(dbname, username, password, host, port string) *DB {
 
   instance.AutoMigrate(&models.Food{})
   instance.AutoMigrate(&models.Meal{})
+  instance.AutoMigrate(&models.MealFood{})
 
   return &DB {Instance: instance}
 }
