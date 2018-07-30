@@ -1,6 +1,6 @@
 ### README
 
-# Quantified Self - Rails
+# Quantified Self - Golang
 
 ### Table Of Contents
 - [Versions/Prerequisites](#versions-prerequisites)

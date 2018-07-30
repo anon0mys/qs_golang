@@ -7,6 +7,8 @@ import (
   "net/http"
   "encoding/json"
   "strconv"
+  "fmt"
+  "io/ioutil"
 
   "github.com/anon0mys/qs_golang/internal/models"
   "github.com/anon0mys/qs_golang/config/database"
@@ -21,10 +23,14 @@ type App struct {
   Server *http.Server
 }
 
-func (a *App) Initialize() {
-  a.DB = database.Initialize()
+type FoodStruct struct {
+  Food models.Food `json:"food"`
+}
+
+func (a *App) Initialize(dbname, username, password, host, port string) {
+  a.DB = database.Initialize(dbname, username, password, host, port)
   a.Router = mux.NewRouter()
-  a.initializeRoutes()
+  a.InitializeRoutes()
 
   headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
   originsOk := handlers.AllowedOrigins([]string{"*"})
@@ -34,17 +40,24 @@ func (a *App) Initialize() {
 }
 
 func (a *App) Run() {
+  fmt.Printf("Server starting, listening on port: %v\n", a.Server.Addr)
   log.Fatal(a.Server.ListenAndServe())
 }
 
-func (a *App) initializeRoutes() {
+func (a *App) InitializeRoutes() {
   a.Router.HandleFunc("/api/v1/foods/", a.CreateFood).Methods("POST")
+  a.Router.HandleFunc("/api/v1/foods", a.CreateFood).Methods("POST")
   a.Router.HandleFunc("/api/v1/foods/", a.GetFoods).Methods("GET")
-  a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.GetFood).Methods("GET")
-  a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.UpdateFood).Methods("PUT", "PATCH", "OPTIONS")
-  a.Router.HandleFunc("/api/v1/foods/{id:[0-9]+}", a.DeleteFood).Methods("DELETE")
+  a.Router.HandleFunc("/api/v1/foods", a.GetFoods).Methods("GET")
+  a.Router.HandleFunc("/api/v1/foods/{id}", a.GetFood).Methods("GET")
+  a.Router.HandleFunc("/api/v1/foods/{id}", a.UpdateFood).Methods("PUT", "PATCH", "OPTIONS")
+  a.Router.HandleFunc("/api/v1/foods/{id}", a.DeleteFood).Methods("DELETE")
   a.Router.HandleFunc("/api/v1/meals/", a.GetMeals).Methods("GET")
-  a.Router.HandleFunc("/api/v1/meals/{id:[0-9]+}/foods", a.GetMeal).Methods("GET")
+  a.Router.HandleFunc("/api/v1/meals", a.GetMeals).Methods("GET")
+  a.Router.HandleFunc("/api/v1/meals/{meal_id}/foods", a.GetMeal).Methods("GET")
+  a.Router.HandleFunc("/api/v1/meals/{meal_id}/foods/", a.GetMeal).Methods("GET")
+  a.Router.HandleFunc("/api/v1/meals/{meal_id}/foods/{id}", a.CreateMealFood).Methods("POST")
+  a.Router.HandleFunc("/api/v1/meals/{meal_id}/foods/{id}", a.DeleteMealFood).Methods("DELETE")
 }
 
 func respondWithError(w http.ResponseWriter, code int, message string) {
@@ -78,7 +91,7 @@ func (a *App) GetFood(w http.ResponseWriter, r *http.Request) {
 
   f = models.Food {ID: id}
   if err := f.GetFood(a.DB.Instance); err != nil {
-    respondWithError(w, http.StatusBadRequest, "Invalid product ID")
+    respondWithError(w, http.StatusBadRequest, "Invalid food ID")
     return
   }
 
@@ -110,20 +123,15 @@ func (a *App) UpdateFood(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) CreateFood(w http.ResponseWriter, r *http.Request) {
-  var f models.Food
-  decoder := json.NewDecoder(r.Body)
-  if err := decoder.Decode(&f); err != nil {
-    respondWithError(w, http.StatusBadRequest, "Food not created")
-    return
-  }
-  defer r.Body.Close()
-
-  if err := f.CreateFood(a.DB.Instance); err != nil {
+  var f FoodStruct
+  body, _ := ioutil.ReadAll(r.Body)
+  json.Unmarshal(body, &f)
+  if err := f.Food.CreateFood(a.DB.Instance); err != nil {
     respondWithError(w, http.StatusInternalServerError, err.Error())
     return
   }
 
-  respondWithJSON(w, http.StatusCreated, f)
+  respondWithJSON(w, http.StatusCreated, f.Food)
 }
 
 func (a *App) DeleteFood(w http.ResponseWriter, r *http.Request) {
@@ -154,7 +162,7 @@ func (a *App) GetMeal(w http.ResponseWriter, r *http.Request) {
   var m models.Meal
   params := mux.Vars(r)
 
-  id, err := strconv.Atoi(params["id"])
+  id, err := strconv.Atoi(params["meal_id"])
   if err != nil {
     respondWithError(w, http.StatusBadRequest, "Invalid food ID")
     return
@@ -164,4 +172,77 @@ func (a *App) GetMeal(w http.ResponseWriter, r *http.Request) {
   meal := m.GetMeal(a.DB.Instance)
 
   respondWithJSON(w, http.StatusOK, meal)
+}
+
+func (a *App) CreateMealFood(w http.ResponseWriter, r *http.Request) {
+  params := mux.Vars(r)
+
+  var m models.Meal
+  mealId, err := strconv.Atoi(params["meal_id"])
+  if err != nil {
+    respondWithError(w, http.StatusBadRequest, "Invalid food ID")
+    return
+  }
+
+  m = models.Meal {ID: mealId}
+  m = m.GetMeal(a.DB.Instance)
+
+
+  var f models.Food
+  foodId, err := strconv.Atoi(params["id"])
+  if err != nil {
+    respondWithError(w, http.StatusBadRequest, "Invalid food ID")
+    return
+  }
+
+  f = models.Food {ID: foodId}
+  if err := f.GetFood(a.DB.Instance); err != nil {
+    respondWithError(w, http.StatusBadRequest, "Invalid food ID")
+    return
+  }
+
+  mf := models.MealFood {Food_id: f.ID, Meal_id: m.ID}
+  if err := mf.CreateMealFood(a.DB.Instance); err != nil {
+    respondWithError(w, http.StatusInternalServerError, err.Error())
+    return
+  }
+
+  respondWithJSON(w, http.StatusCreated, mf)
+}
+
+func (a *App) DeleteMealFood(w http.ResponseWriter, r *http.Request) {
+  params := mux.Vars(r)
+
+  var m models.Meal
+  mealId, err := strconv.Atoi(params["meal_id"])
+  if err != nil {
+    respondWithError(w, http.StatusBadRequest, "Invalid food ID")
+    return
+  }
+
+  m = models.Meal {ID: mealId}
+  m = m.GetMeal(a.DB.Instance)
+
+
+  var f models.Food
+  foodId, err := strconv.Atoi(params["id"])
+  if err != nil {
+    respondWithError(w, http.StatusBadRequest, "Invalid food ID")
+    return
+  }
+
+  f = models.Food {ID: foodId}
+  if err := f.GetFood(a.DB.Instance); err != nil {
+    respondWithError(w, http.StatusBadRequest, "Invalid food ID")
+    return
+  }
+
+  mf := models.MealFood {}
+  mf.GetMealFood(a.DB.Instance, m.ID, f.ID)
+  if err := mf.DeleteMealFood(a.DB.Instance); err != nil {
+    respondWithError(w, http.StatusInternalServerError, err.Error())
+    return
+  }
+
+  respondWithJSON(w, http.StatusCreated, "succesfully removed" + f.Name + "from" + m.Name)
 }
